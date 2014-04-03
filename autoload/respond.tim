@@ -74,7 +74,15 @@
     (if mneumonic ; no args means jump to definition
       (let [search-result (#*search (str #"^\s*\zs" fn-name) "" end-line)]
         (if (zero? search-result)
-          (not-found bang fn-name))))))
+          (not-found bang fn-name)
+          (norm "zz"))))))
 
 (execute
   "command! -nargs=* -bang E call plugin#respond#jump('<bang>'=='!', <f-args>)")
+
+
+(defn handler-jump []
+    (let [handler-name (re-find #"\{this\.\zs.*\ze\}" (#*getline "."))]
+      (prn (first handler-name))))
+
+(execute "command! -nargs=0 Eh call plugin#respond#handler_jump()")
