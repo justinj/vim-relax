@@ -1,0 +1,80 @@
+(ns plugin.respond)
+
+(defn search-for 
+  ([string] (search-for string "" 0))
+  ([string flags] (search-for string flags 0))
+  ([string flags stopline]
+   (execute (str "keepjumps call search(\""
+                string "\", \"" flags "\", "
+                 stopline ")"))
+   (#*line ".")))
+
+(defn jump-to-line [linenum]
+  (execute (str "keepjumps normal! " linenum "G")))
+
+(defn current-class-range []
+  (let [window-pos (#*winsaveview)
+        curline (#*line ".")
+        first-line (search-for "React.createClass" "b")]
+    (execute "keepjumps normal! $%")
+    (let [result [first-line (#*line ".")]]
+      (jump-to-line curline)
+      (#*winrestview window-pos)
+      result)))
+
+(def function-mneumonics
+  {"cdm"  "componentDidMount"
+   "cdup" "componentDidUpdate"
+   "cwm"  "componentWillMount"
+   "cwr"  "componentWillReceiveProps"
+   "cwun" "componentWillUnmount"
+   "cwu"  "componentWillUpdate"
+   "gdp"  "getDefaultProps"
+   "gis"  "getInitialState"
+   "pt"   "propTypes"
+   "r"    "render"
+   "scu"  "shouldComponentUpdate"})
+
+(def object? #{"propTypes"})
+
+(def args-mappings
+  {"componentDidUpdate"        "prevProps, prevState"
+   "componentWillReceiveProps" "nextProps"
+   "componentWillUpdate"       "nextProps, nextState"
+   "shouldComponentUpdate"     "nextProps, nextState"})
+
+(defn args-for [function-name]
+  (args-mappings function-name ""))
+
+(defn definition-for [function-name]
+  (if (object? function-name)
+    (str function-name ": {")
+    (str function-name ": function(" (args-for function-name) ") {")))
+
+; normal! is preferable because it ignores user mappings
+(defn norm [input] (execute (str "normal! " input)))
+
+(defn not-found [bang fn-name]
+  ; `bang` was created by a vim equality statement...
+  (if (= bang 1)
+    (do (norm "o")
+        (#*setline "." (definition-for fn-name))
+        (norm "==o},")
+        (#*feedkeys "O" "n"))
+    (do (echo (str fn-name " does not exist - call with ! to create"))
+        (norm "''"))))
+
+(defn jump [bang & rst]
+  (let [[start-line end-line] (current-class-range)
+        [mneumonic] rst
+        fn-name (function-mneumonics mneumonic)]
+    ; manually add to the jump list...
+    (norm "m'")
+    (jump-to-line start-line)
+    (if mneumonic ; no args means jump to definition
+      (let [search-result (#*search (str #"^\s*\zs" fn-name) "" end-line)]
+        (if (zero? search-result)
+          (not-found bang fn-name))))))
+
+(execute
+  "command! -nargs=* -bang E call plugin#respond#jump('<bang>'=='!', <f-args>)")
