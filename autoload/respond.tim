@@ -87,7 +87,7 @@
 (defn create-method [class mneumonic]
   (let [fname (function-mneumonics mneumonic)]
     (jump-to-line (:first-line class))
-    (norm (str "o" (definition-for fname) "\<CR>},\<ESC>O"))
+    (norm (str "o" (definition-for fname) "\<CR>},\<CR>\<ESC>kO"))
     (#*feedkeys "S" "n")))
 
 (defn fancy-lookup [bang mneumonic]
