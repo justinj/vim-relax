@@ -1,6 +1,6 @@
 (ns plugin.respond)
 
-(defn search-for 
+(defn search-for
   ([string] (search-for string "" 0))
   ([string flags] (search-for string flags 0))
   ([string flags stopline]
@@ -55,7 +55,8 @@
 (defn norm [input] (execute (str "normal! " input)))
 
 (defn parse-class []
-  (let [[first-line last-line] (current-class-range)]
+  (let [begin-state (#*winsaveview)
+        [first-line last-line] (current-class-range)]
     (jump-to-line first-line)
     (norm "j")
     (loop [methods []]
@@ -64,7 +65,7 @@
             (let [cword (#*expand "<cword>")
                   lnum (#*line ".")]
               (execute "keepjumps normal! $%j")
-              (recur (conj methods 
+              (recur (conj methods
                            {:name cword
                             :start-line lnum
                             :end-line (dec (#*line "."))}
@@ -73,12 +74,13 @@
               without-last (butlast methods)
               marked-as-last (conj last-method [:is-last true])
               methods (conj without-last marked-as-last)]
+          (#*winrestview begin-state)
           {:methods methods
            :first-line first-line
-           :last-line last-line}
-          )))))
+           :last-line last-line})))))
 
-; The below uses the react snippets - TODO: check if they are available and use
+; The commented out function below uses the react snippets
+; TODO: check if they are available and use
 ; them instead
 ; (defn create-method [class mneumonic]
 ;   (jump-to-line (:first-line class))
@@ -90,7 +92,11 @@
     (norm (str "o" (definition-for fname) "\<CR>},\<CR>\<ESC>kO"))
     (#*feedkeys "S" "n")))
 
-(defn fancy-lookup [bang mneumonic]
+(defn jump
+  ([bang]
+    (let [class (parse-class)]
+      (jump-to-line (:first-line class))))
+  ([bang mneumonic]
   (let [begin-state (#*winsaveview)
         is-bang (not (zero? bang)) ; since this is created by vim equality
         class (parse-class)
@@ -108,9 +114,9 @@
         (echo
           (str "Did not find " fname " in this class, call with ! to create."))
         (#*winrestview begin-state))
-      (when is-bang (create-method class mneumonic)))))
+      (when is-bang (create-method class mneumonic))))))
 
-(execute "command! -bang -nargs=* R call plugin#respond#fancy_lookup(\"<bang>\"==\"!\", <f-args>)")
+(execute "command! -bang -nargs=* R call plugin#respond#jump(\"<bang>\"==\"!\", <f-args>)")
 
 (defn method-containing-line [class lnum]
   (let [methods (:methods class)
@@ -118,28 +124,36 @@
                               methods)]
     (if-not (empty? valid-methods)
       (first valid-methods))))
-    
 
-(defn create-handler []
+
+(defn add-to-jump-list []
+  (norm "m'"))
+
+(defn create-method-after-current
+  [class method-name]
+  (let [this-method (method-containing-line class (#*line "."))
+        ending-line (:end-line this-method)
+        command (str (if (:is-last this-method) "A,\<ESC>" "")
+                     "o\<CR>" method-name ": function() {\<CR>}"
+                     (if (:is-last this-method) "" ","))]
+    (jump-to-line ending-line)
+    (norm command)
+    (#*feedkeys "O" "n")))
+
+(defn parse-and-jump-to-handler []
   (let [begin-state (#*winsaveview)
         class (parse-class)
-        _ (#*winrestview begin-state)
         fname (first (re-find #"\{this\.\zs.*\ze\}" (#*expand "<cWORD>")))
-        methods (filter #(= (:name %) fname) (:methods class))
-        found (not (empty? methods))]
-    (when found
-      ; we want to add the original point to the jump list
-      (#*winrestview begin-state)
-      (norm "m'")
-      (jump-to-line (:start-line (first methods))))
-    (when-not found
-      (let [this-method (method-containing-line class (#*line "."))
-            ending-line (:end-line this-method)
-            command (str (if (:is-last this-method) "A,\<ESC>" "")
-                         "o\<CR>" fname ": function () {\<CR>}"
-                         (if (:is-last this-method) "" ","))]
-        (jump-to-line ending-line)
-        (norm command)
-        (#*feedkeys "O" "n")))))
+        method (first (filter #(= (:name %) fname) (:methods class)))]
+    (if-not fname
+      (echo "You don't seem to be on a handler")
+      (if method
+        (do (#*winrestview begin-state)
+            (add-to-jump-list)
+            (jump-to-line (:start-line method)))
+        (create-method-after-current class fname)))))
 
-(execute "command! -nargs=* Rj call plugin#respond#create_handler(\"<bang>\"==\"!\", <f-args>)")
+(defn handler-jump []
+  (parse-and-jump-to-handler))
+
+(execute "command! -nargs=* Rj call plugin#respond#handler_jump(\"<bang>\"==\"!\", <f-args>)")
