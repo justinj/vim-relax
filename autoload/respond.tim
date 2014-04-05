@@ -54,35 +54,85 @@
 ; normal! is preferable because it ignores user mappings
 (defn norm [input] (execute (str "normal! " input)))
 
-(defn not-found [bang fn-name]
-  ; `bang` was created by a vim equality statement...
-  (if (= bang 1)
-    (do (norm "o")
-        (#*setline "." (definition-for fn-name))
-        (norm "==o},")
-        (#*feedkeys "O" "n"))
-    (do (echo (str fn-name " does not exist - call with ! to create"))
-        (norm "''"))))
+(defn parse-class []
+  (let [[first-line last-line] (current-class-range)]
+    (jump-to-line first-line)
+    (norm "j")
+    (loop [methods []]
+      (if (< (#*line ".") last-line)
+        (do (#*search #"(\w+: function|propTypes:)")
+            (let [cword (#*expand "<cword>")
+                  lnum (#*line ".")]
+              (execute "keepjumps normal! $%j")
+              (recur (conj methods 
+                           {:name cword
+                            :start-line lnum
+                            :end-line (dec (#*line "."))}
+                           ))))
+        {:methods methods
+         :first-line first-line
+         :last-line last-line}
+        ))))
 
-(defn jump [bang & rst]
-  (let [[start-line end-line] (current-class-range)
-        [mneumonic] rst
-        fn-name (function-mneumonics mneumonic)]
-    ; manually add to the jump list...
-    (norm "m'")
-    (jump-to-line start-line)
-    (if mneumonic ; no args means jump to definition
-      (let [search-result (#*search (str #"^\s*\zs" fn-name) "" end-line)]
-        (if (zero? search-result)
-          (not-found bang fn-name)
-          (norm "zz"))))))
+; The below uses the react snippets - TODO: check if they are available and use
+; them instead
+; (defn create-method [class mneumonic]
+;   (jump-to-line (:first-line class))
+;   (#*feedkeys (str "o" mneumonic "\<tab>") "m"))
 
-(execute
-  "command! -nargs=* -bang E call plugin#respond#jump('<bang>'=='!', <f-args>)")
+(defn create-method [class mneumonic]
+  (let [fname (function-mneumonics mneumonic)]
+    (jump-to-line (:first-line class))
+    (norm (str "o" (definition-for fname) "\<CR>},\<ESC>O"))
+    (#*feedkeys "S" "n")))
 
+(defn fancy-lookup [bang mneumonic]
+  (let [begin-state (#*winsaveview)
+        is-bang (not (zero? bang)) ; since this is created by vim equality
+        class (parse-class)
+        fname (function-mneumonics mneumonic)
+        methods (filter #(= (:name %) fname) (:methods class))
+        found (not (empty? methods))]
+    (when found
+      ; we want to add the original point to the jump list
+      (#*winrestview begin-state)
+      (norm "m'")
+      (jump-to-line (:start-line (first methods)))
+      (norm "zz"))
+    (when-not found
+      (when-not is-bang
+        (echo
+          (str "Did not find " fname " in this class, call with ! to create."))
+        (#*winrestview begin-state))
+      (when is-bang (create-method class mneumonic)))))
 
-(defn handler-jump []
-    (let [handler-name (re-find #"\{this\.\zs.*\ze\}" (#*getline "."))]
-      (prn (first handler-name))))
+(execute "command! -bang -nargs=* R call plugin#respond#fancy_lookup(\"<bang>\"==\"!\", <f-args>)")
 
-(execute "command! -nargs=0 Eh call plugin#respond#handler_jump()")
+(defn method-containing-line [class lnum]
+  (let [methods (:methods class)
+        valid-methods (filter #(<= (:start-line %) lnum (:end-line %))
+                              methods)]
+    (if-not (empty? valid-methods)
+      (first valid-methods))))
+    
+
+(defn create-handler [bang]
+  (let [begin-state (#*winsaveview)
+        class (parse-class)
+        _ (#*winrestview begin-state)
+        fname (first (re-find #"\{this\.\zs.*\ze\}" (#*expand "<cWORD>")))
+        methods (filter #(= (:name %) fname) (:methods class))
+        found (not (empty? methods))]
+    (when found
+      ; we want to add the original point to the jump list
+      (#*winrestview begin-state)
+      (norm "m'")
+      (jump-to-line (:start-line (first methods))))
+    (when-not found
+      (let [this-method (method-containing-line class (#*line "."))
+            ending-line (:end-line this-method)]
+        (jump-to-line ending-line)
+        (norm (str "o\<CR>" fname ": function () {\<CR>}"))
+        (#*feedkeys "O" "n")))))
+
+(execute "command! -bang -nargs=* Rj call plugin#respond#create_handler(\"<bang>\"==\"!\", <f-args>)")
