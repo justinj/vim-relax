@@ -30,7 +30,7 @@
       (#*winrestview window-pos)
       result)))
 
-(def function-mneumonics
+(def function-mnemonics
   {"cdm"  "componentDidMount"
    "cdup" "componentDidUpdate"
    "cwm"  "componentWillMount"
@@ -101,12 +101,12 @@
 ; The commented out function below uses the react snippets
 ; TODO: check if they are available and use
 ; them instead
-; (defn create-method [class mneumonic]
+; (defn create-method [class mnemonic]
 ;   (jump-to-line (:first-line class))
-;   (#*feedkeys (str "o" mneumonic "\<tab>") "m"))
+;   (#*feedkeys (str "o" mnemonic "\<tab>") "m"))
 
-(defn create-method [class mneumonic enter-insert]
-  (let [fname (function-mneumonics mneumonic)]
+(defn create-method [class mnemonic enter-insert]
+  (let [fname (function-mnemonics mnemonic)]
     (jump-to-line (:first-line class))
     (norm (str "o" (definition-for fname) "\<CR>},\<CR>\<ESC>kk"))
     (when enter-insert (#*feedkeys "o" "n"))))
@@ -115,11 +115,11 @@
   ([bang _]
    (let [class (parse-class)]
      (jump-to-line (:first-line class))))
-  ([bang enter-insert mneumonic]
+  ([bang enter-insert mnemonic]
    (let [begin-state (#*winsaveview)
          is-bang (not (zero? bang)) ; since this is created by vim equality
          class (parse-class)
-         fname (function-mneumonics mneumonic)
+         fname (function-mnemonics mnemonic)
          methods (filter #(= (:name %) fname) (:methods class))
          found (not (empty? methods))]
      (when found
@@ -133,7 +133,7 @@
          (echo
            (str "Did not find " fname " in this class, call with ! to create."))
          (#*winrestview begin-state))
-       (when is-bang (create-method class mneumonic enter-insert))))))
+       (when is-bang (create-method class mnemonic enter-insert))))))
 
 (defn jump-to-or-create [bang & args]
   (apply jump bang true args))

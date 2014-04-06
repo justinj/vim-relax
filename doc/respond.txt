@@ -11,7 +11,7 @@ interaction with components written for Facebook's React library.
 COMMANDS                                        *respond-commands*
 
                                                 *respond-:Rjump*
-:R[jump] [mneumonic]    Jump to the method referred to by [mneumonic].
+:R[jump] [mnemonic]     Jump to the method referred to by [mnemonic].
 
                                                 *respond-:Rhandler*
 :Rhandler               Jump to or create a handler for the use which is under
@@ -21,7 +21,7 @@ COMMANDS                                        *respond-commands*
 :Rprops                 Create primitive propType declarations for all uses of
                         `this.props` within the current class.
 
-MNEUMONICS                                      *respond-mneumonics*
+MNEMONICS                                       *respond-mnemonics*
 
 * pt   - propTypes
 * gdp  - getDefaultProps
