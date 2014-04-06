@@ -138,7 +138,11 @@
 (defn jump-to-or-create [bang & args]
   (apply jump bang true args))
 
-(execute "command! -bang -nargs=* R call plugin#respond#jump_to_or_create(<bang>0, <f-args>)")
+(defn define-command-for-jump [command]
+  (execute (str "command! -bang -nargs=* " command " call plugin#respond#jump_to_or_create(<bang>0, <f-args>)"))
+  )
+(define-command-for-jump "Rjump")
+(define-command-for-jump "R")
 
 (defn method-containing-line [class lnum]
   (let [methods (:methods class)
@@ -179,7 +183,7 @@
 (defn handler-jump []
   (parse-and-jump-to-handler))
 
-(execute "command! -nargs=* Rj call plugin#respond#handler_jump(\"<bang>\"==\"!\", <f-args>)")
+(execute "command! -nargs=* Rhandler call plugin#respond#handler_jump(\"<bang>\"==\"!\", <f-args>)")
 
 
 (defn set-difference [a b]
@@ -208,4 +212,4 @@
 
 
 
-(execute "command! -nargs=0 Rp call plugin#respond#gen_proptypes()")
+(execute "command! -nargs=0 Rprops call plugin#respond#gen_proptypes()")
