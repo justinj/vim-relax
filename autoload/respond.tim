@@ -116,7 +116,7 @@
         (#*winrestview begin-state))
       (when is-bang (create-method class mneumonic))))))
 
-(execute "command! -bang -nargs=* R call plugin#respond#jump(\"<bang>\"==\"!\", <f-args>)")
+(execute "command! -bang -nargs=* R call plugin#respond#jump(<bang>0, <f-args>)")
 
 (defn method-containing-line [class lnum]
   (let [methods (:methods class)
