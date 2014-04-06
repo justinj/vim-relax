@@ -1,0 +1,44 @@
+*respond.txt*  Plugin for interacting with React components
+
+Author:  Justin Jaffray <http://justinjaffray.com>
+License: Same terms as Vim itself (see |license|)
+
+INTRODUCTION                                    *respond*
+
+This plugin aims to provide a number of helpful commands for automating
+interaction with components written for Facebook's React library.
+
+COMMANDS                                        *respond-commands*
+
+                                                *respond-:Rjump*
+:R[jump] [mneumonic]    Jump to the method referred to by [mneumonic].
+
+                                                *respond-:Rhandler*
+:Rhandler               Jump to or create a handler for the use which is under
+                        the cursor, such as `onClick={this.handleClick}`.
+
+                                                *respond-:Rprops*
+:Rprops                 Create primitive propType declarations for all uses of
+                        `this.props` within the current class.
+
+MNEUMONICS                                      *respond-mneumonics*
+
+* pt   - propTypes
+* gdp  - getDefaultProps
+* gis  - getInitialState
+* cwm  - componentWillMount
+* cdm  - componentDidMount
+* scu  - shouldComponentUpdate
+* cdup - componentDidUpdate
+* r    - render
+* cwr  - componentWillReceiveProps
+* cwu  - componentWillUpdate
+* cwun - componentWillUnmount
+
+ABOUT                                           *respond-about*
+
+Download the latest version and report bugs on GitHub:
+
+http://github.com/justinj/vim-respond
+
+ vim:tw=78:et:ft=help:norl:
