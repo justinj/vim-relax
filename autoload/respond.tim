@@ -1,5 +1,13 @@
 (ns plugin.respond)
 
+(defn re-seq [re string]
+  (loop [index 1
+         matches []]
+    (let [next-match (#*matchstr string re 0 index)]
+      (if (= "" next-match)
+        matches
+        (recur (inc index) (conj matches next-match))))))
+
 (defn search-for
   ([string] (search-for string "" 0))
   ([string flags] (search-for string flags 0))
@@ -52,7 +60,17 @@
     (str function-name ": function(" (args-for function-name) ") {")))
 
 ; normal! is preferable because it ignores user mappings
-(defn norm [input] (execute (str "normal! " input)))
+(defn norm [& input] (execute (str "normal! " (join input))))
+
+(defn parse-props [proptypes-method]
+  (if proptypes-method
+    (let [proplines (join (#*getline (inc (:start-line proptypes-method))
+                                     (dec (:end-line proptypes-method))))]
+      (re-seq #"<\w+\ze:" proplines))
+    #{}))
+
+(defn method-with-name [methods name-to-find]
+  (first (filter #(= (:name %) name-to-find) methods)))
 
 (defn parse-class []
   (let [begin-state (#*winsaveview)
@@ -76,6 +94,7 @@
               methods (conj without-last marked-as-last)]
           (#*winrestview begin-state)
           {:methods methods
+           :props (parse-props (method-with-name methods "propTypes"))
            :first-line first-line
            :last-line last-line})))))
 
@@ -86,37 +105,40 @@
 ;   (jump-to-line (:first-line class))
 ;   (#*feedkeys (str "o" mneumonic "\<tab>") "m"))
 
-(defn create-method [class mneumonic]
+(defn create-method [class mneumonic enter-insert]
   (let [fname (function-mneumonics mneumonic)]
     (jump-to-line (:first-line class))
-    (norm (str "o" (definition-for fname) "\<CR>},\<CR>\<ESC>kO"))
-    (#*feedkeys "S" "n")))
+    (norm (str "o" (definition-for fname) "\<CR>},\<CR>\<ESC>kk"))
+    (when enter-insert (#*feedkeys "o" "n"))))
 
 (defn jump
-  ([bang]
-    (let [class (parse-class)]
-      (jump-to-line (:first-line class))))
-  ([bang mneumonic]
-  (let [begin-state (#*winsaveview)
-        is-bang (not (zero? bang)) ; since this is created by vim equality
-        class (parse-class)
-        fname (function-mneumonics mneumonic)
-        methods (filter #(= (:name %) fname) (:methods class))
-        found (not (empty? methods))]
-    (when found
-      ; we want to add the original point to the jump list
-      (#*winrestview begin-state)
-      (norm "m'")
-      (jump-to-line (:start-line (first methods)))
-      (norm "zz"))
-    (when-not found
-      (when-not is-bang
-        (echo
-          (str "Did not find " fname " in this class, call with ! to create."))
-        (#*winrestview begin-state))
-      (when is-bang (create-method class mneumonic))))))
+  ([bang _]
+   (let [class (parse-class)]
+     (jump-to-line (:first-line class))))
+  ([bang enter-insert mneumonic]
+   (let [begin-state (#*winsaveview)
+         is-bang (not (zero? bang)) ; since this is created by vim equality
+         class (parse-class)
+         fname (function-mneumonics mneumonic)
+         methods (filter #(= (:name %) fname) (:methods class))
+         found (not (empty? methods))]
+     (when found
+       ; we want to add the original point to the jump list
+       (#*winrestview begin-state)
+       (norm "m'")
+       (jump-to-line (:start-line (first methods)))
+       (norm "zz"))
+     (when-not found
+       (when-not is-bang
+         (echo
+           (str "Did not find " fname " in this class, call with ! to create."))
+         (#*winrestview begin-state))
+       (when is-bang (create-method class mneumonic enter-insert))))))
 
-(execute "command! -bang -nargs=* R call plugin#respond#jump(<bang>0, <f-args>)")
+(defn jump-to-or-create [bang & args]
+  (apply jump bang true args))
+
+(execute "command! -bang -nargs=* R call plugin#respond#jump_to_or_create(<bang>0, <f-args>)")
 
 (defn method-containing-line [class lnum]
   (let [methods (:methods class)
@@ -138,7 +160,7 @@
                      (if (:is-last this-method) "" ","))]
     (jump-to-line ending-line)
     (norm command)
-    (#*feedkeys "O" "n")))
+    (norm "O")))
 
 (defn parse-and-jump-to-handler []
   (let [begin-state (#*winsaveview)
@@ -151,9 +173,39 @@
         (do (#*winrestview begin-state)
             (add-to-jump-list)
             (jump-to-line (:start-line method)))
-        (create-method-after-current class fname)))))
+        (create-method-after-current class fname)
+        ))))
 
 (defn handler-jump []
   (parse-and-jump-to-handler))
 
 (execute "command! -nargs=* Rj call plugin#respond#handler_jump(\"<bang>\"==\"!\", <f-args>)")
+
+
+(defn set-difference [a b]
+  (apply disj a b))
+
+(defn gen-proptypes []
+  (let [class (parse-class)
+        class-lines (#*getline (:first-line class) (:last-line class))
+        class-contents (#*join class-lines)
+        props (set (re-seq #"this\.props\.\zs\w+" class-contents))
+        existing-props (set (:props class))
+        props-to-create (set-difference props existing-props)]
+    (jump 1 false "pt")
+    (norm "$%k")
+    (let [top-prop (inc (#*line "."))]
+      (when (and (not (empty? existing-props))
+                 (not (empty? props-to-create))
+                 (not (re-find #",\s*$" (#*getline "."))))
+        (norm "A,"))
+      (doall (map #(norm (str "o" % ": React.PropTypes.string,"))
+                  props-to-create))
+      ; remove the last comma
+      (when-not (empty? props-to-create)
+        (norm "A\<BS>"))
+      (jump-to-line top-prop))))
+
+
+
+(execute "command! -nargs=0 Rp call plugin#respond#gen_proptypes()")
