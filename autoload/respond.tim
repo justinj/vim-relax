@@ -82,7 +82,7 @@
         (do (#*search #"(\w+: function|propTypes:)")
             (let [cword (#*expand "<cword>")
                   lnum (#*line ".")]
-              (execute "keepjumps normal! $%j")
+              (execute "keepjumps normal! $%")
               (recur (conj methods
                            {:name cword
                             :start-line lnum
