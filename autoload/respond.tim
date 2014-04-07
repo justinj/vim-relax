@@ -65,7 +65,7 @@
 (defn parse-props [proptypes-method]
   (if proptypes-method
     (let [proplines (join (#*getline (inc (:start-line proptypes-method))
-                                     (dec (:end-line proptypes-method))))]
+                                     (:end-line proptypes-method)))]
       (re-seq #"<\w+\ze:" proplines))
     #{}))
 
