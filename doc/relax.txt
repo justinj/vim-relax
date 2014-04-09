@@ -1,27 +1,27 @@
-*respond.txt*  Plugin for interacting with React components
+*relax.txt*  Plugin for interacting with React components
 
 Author:  Justin Jaffray <http://justinjaffray.com>
 License: Same terms as Vim itself (see |license|)
 
-INTRODUCTION                                    *respond*
+INTRODUCTION                                    *relax*
 
 This plugin aims to provide a number of helpful commands for automating
 interaction with components written for Facebook's React library.
 
-COMMANDS                                        *respond-commands*
+COMMANDS                                        *relax-commands*
 
-                                                *respond-:Rjump*
+                                                *relax-:Rjump*
 :R[jump] [mnemonic]     Jump to the method referred to by [mnemonic].
 
-                                                *respond-:Rhandler*
+                                                *relax-:Rhandler*
 :Rhandler               Jump to or create a handler for the use which is under
                         the cursor, such as `onClick={this.handleClick}`.
 
-                                                *respond-:Rprops*
+                                                *relax-:Rprops*
 :Rprops                 Create primitive propType declarations for all uses of
                         `this.props` within the current class.
 
-MNEMONICS                                       *respond-mnemonics*
+MNEMONICS                                       *relax-mnemonics*
 
 * pt   - propTypes
 * gdp  - getDefaultProps
@@ -35,10 +35,10 @@ MNEMONICS                                       *respond-mnemonics*
 * cwu  - componentWillUpdate
 * cwun - componentWillUnmount
 
-ABOUT                                           *respond-about*
+ABOUT                                           *relax-about*
 
 Download the latest version and report bugs on GitHub:
 
-http://github.com/justinj/vim-respond
+http://github.com/justinj/vim-relax
 
  vim:tw=78:et:ft=help:norl:

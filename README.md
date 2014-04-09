@@ -1,4 +1,4 @@
-# respond.vim
+# relax.vim
 
 React tools for Vim
 
