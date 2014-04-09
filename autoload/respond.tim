@@ -79,25 +79,25 @@
     (jump-to-line first-line)
     (norm "j")
     (loop [methods []]
-      (if (< (#*line ".") last-line)
-        (do (#*search #"(\w+: function|propTypes:)")
-            (let [cword (#*expand "<cword>")
-                  lnum (#*line ".")]
-              (execute "keepjumps normal! $%")
-              (recur (conj methods
-                           {:name cword
-                            :start-line lnum
-                            :end-line (dec (#*line "."))}
-                           ))))
-        (let [last-method (last methods)
-              without-last (butlast methods)
-              marked-as-last (conj last-method [:is-last true])
-              methods (conj without-last marked-as-last)]
-          (#*winrestview begin-state)
-          {:methods methods
-           :props (parse-props (method-with-name methods "propTypes"))
-           :first-line first-line
-           :last-line last-line})))))
+          (do (#*search #"(\w+: function|propTypes:)" "W")
+            (if (< (#*line ".") last-line)
+              (let [cword (#*expand "<cword>")
+                    lnum (#*line ".")]
+                (execute "keepjumps normal! $%")
+                (recur (conj methods
+                             {:name cword
+                              :start-line lnum
+                              :end-line (dec (#*line "."))}
+                             )))
+              (let [last-method (last methods)
+                    without-last (butlast methods)
+                    marked-as-last (conj last-method [:is-last true])
+                    methods (conj without-last marked-as-last)]
+                (#*winrestview begin-state)
+                {:methods methods
+                 :props (parse-props (method-with-name methods "propTypes"))
+                 :first-line first-line
+                 :last-line last-line}))))))
 
 ; The commented out function below uses the react snippets
 ; TODO: check if they are available and use
