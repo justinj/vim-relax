@@ -1,6 +1,5 @@
 (ns respond)
 
-
 (defn re-seq [re string]
   (loop [index 1
          matches []]
@@ -202,7 +201,3 @@
       (when-not (empty? props-to-create)
         (norm "A\<BS>"))
       (jump-to-line top-prop))))
-
-
-
-(execute "command! -nargs=0 Rprops call plugin#respond#gen_proptypes()")
