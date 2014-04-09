@@ -2,6 +2,10 @@
 
 React tools for Vim
 
+Navigating React components got you stressed?
+Chill!
+Relax.vim has got you covered.
+
 **This is not ready to be used in general**
 
 It's still a bit buggy, and the feature-set is not fully fleshed out yet.
