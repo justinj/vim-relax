@@ -1,4 +1,5 @@
-(ns plugin.respond)
+(ns respond)
+
 
 (defn re-seq [re string]
   (loop [index 1
@@ -138,12 +139,6 @@
 (defn jump-to-or-create [bang & args]
   (apply jump bang true args))
 
-(defn define-command-for-jump [command]
-  (execute (str "command! -bang -nargs=* " command " call plugin#respond#jump_to_or_create(<bang>0, <f-args>)"))
-  )
-(define-command-for-jump "Rjump")
-(define-command-for-jump "R")
-
 (defn method-containing-line [class lnum]
   (let [methods (:methods class)
         valid-methods (filter #(<= (:start-line %) lnum (:end-line %))
@@ -182,9 +177,6 @@
 
 (defn handler-jump []
   (parse-and-jump-to-handler))
-
-(execute "command! -nargs=* Rhandler call plugin#respond#handler_jump(\"<bang>\"==\"!\", <f-args>)")
-
 
 (defn set-difference [a b]
   (apply disj a b))
