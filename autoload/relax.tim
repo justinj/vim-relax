@@ -182,13 +182,17 @@
 (defn set-difference [a b]
   (apply disj a b))
 
+(defn valid-prop? [prop]
+  (not (#{"children"} prop)))
+
 (defn gen-proptypes []
   (let [class (parse-class)
         class-lines (#*getline (:first-line class) (:last-line class))
         class-contents (#*join class-lines)
         props (set (re-seq #"this\.props\.\zs\w+" class-contents))
         existing-props (set (:props class))
-        props-to-create (set-difference props existing-props)]
+        unspecified-props (set-difference props existing-props)
+        props-to-create (filter valid-prop? unspecified-props)]
     (jump 1 false "pt")
     (norm "$%k")
     (let [top-prop (inc (#*line "."))]
