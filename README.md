@@ -6,12 +6,6 @@ Navigating React components got you stressed?
 Chill!
 Relax.vim has got you covered.
 
-**This is not ready to be used in general**
-
-It's still a bit buggy, and the feature-set is not fully fleshed out yet.
-Installation **likely does not work at the the moment** because of the use of TimL..
-That said, if you'd like to try it and give feedback or feature ideas feel free :)
-
 ## Installation
 
 Install it like any other Vim plugin, the one difference is that this depends
