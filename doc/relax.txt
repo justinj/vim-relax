@@ -34,6 +34,7 @@ MNEMONICS                                       *relax-mnemonics*
 * cwr  - componentWillReceiveProps
 * cwu  - componentWillUpdate
 * cwun - componentWillUnmount
+* st   - statics
 
 ABOUT                                           *relax-about*
 

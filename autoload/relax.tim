@@ -41,9 +41,11 @@
    "gis"  "getInitialState"
    "pt"   "propTypes"
    "r"    "render"
-   "scu"  "shouldComponentUpdate"})
+   "scu"  "shouldComponentUpdate"
+   "st"   "statics"})
 
-(def object? #{"propTypes"})
+(def object? #{"propTypes"
+               "statics"})
 
 (def args-mappings
   {"componentDidUpdate"        "prevProps, prevState"
@@ -79,7 +81,7 @@
     (jump-to-line first-line)
     (norm "j")
     (loop [methods []]
-          (let [search-result (#*search #"(\w+: function|propTypes:)" "W")]
+          (let [search-result (#*search #"(\w+: function|(propTypes|statics):)" "W")]
           (do
             (if (and (nonzero? search-result) (< (#*line ".") last-line))
               (let [cword (#*expand "<cword>")
