@@ -160,7 +160,7 @@
         command (str (if (:is-last this-method) "A,\<ESC>" "")
                      "o\<CR>" method-name ": function() {\<CR>}"
                      (if (:is-last this-method) "" ","))]
-    (jump-to-line ending-line)
+    (jump-to-line (inc ending-line))
     (norm command)
     (norm "O")))
 
