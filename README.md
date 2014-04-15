@@ -12,7 +12,7 @@ Chill, relax.vim has got you covered.
 * Easily jump to any method within a React class with `:R`
   * `:R r` to jump to `render`
   * `:R gis` to jump to `getInitialState`
-  * `:R! gdp` to jump to getDefaultProps, and create it if it doesn't exist
+  * `:R! gdp` to jump to `getDefaultProps`, and create it if it doesn't exist
 * Jump to event handlers with `:RHandler`
   * Anywhere on the line `onClick={this.handleClick}` will jump to it
   * It will also create the handler if it doesn't exist
