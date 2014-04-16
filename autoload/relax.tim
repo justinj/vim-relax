@@ -175,8 +175,7 @@
         (do (#*winrestview begin-state)
             (add-to-jump-list)
             (jump-to-line (:start-line method)))
-        (create-method-after-current class fname)
-        ))))
+        (create-method-after-current class fname)))))
 
 (defn handler-jump []
   (parse-and-jump-to-handler))
