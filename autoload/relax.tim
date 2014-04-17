@@ -118,6 +118,7 @@
 (defn jump
   ([bang _]
    (let [class (parse-class)]
+     (norm "m'")
      (jump-to-line (:first-line class))))
   ([bang enter-insert mnemonic]
    (let [begin-state (#*winsaveview)
